@@ -124,3 +124,26 @@ func (v *Vec3) normalize() *Vec3 {
 func SampleSquare() Vec3 {
 	return Vec3{rand.Float64() - 0.5, rand.Float64() - 0.5, 0.0}
 }
+
+func RandVec3() Vec3 {
+	return Vec3{rand.Float64(), rand.Float64(), rand.Float64()}
+}
+
+func RandUnit() Vec3 {
+	var i = Interval{-1.0, 1.0}
+	for {
+		var p = i.randVec3()
+		var lensq = p.lenSq()
+		if 1e-160 < lensq && lensq <= 1.0 {
+			return *p.div(math.Sqrt(lensq))
+		}
+	}
+}
+
+func RandHemi(normal Vec3) Vec3 {
+	var on_unit_sphere = RandUnit()
+	if on_unit_sphere.dot(normal) < 0.0 { // In the same hemisphere as the normal
+		on_unit_sphere.negate()
+	}
+	return on_unit_sphere
+}

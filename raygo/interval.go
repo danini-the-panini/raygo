@@ -38,3 +38,7 @@ func (i Interval) clamp(x float64) float64 {
 	}
 	return x
 }
+
+func (i Interval) randVec3() Vec3 {
+	return Vec3{i.rand(), i.rand(), i.rand()}
+}

@@ -10,6 +10,7 @@ type Camera struct {
 	image_width         int
 	image_height        int
 	samples_per_pixel   int
+	max_depth           int
 	pixel_samples_scale float64
 	center              Vec3
 	pixel00_loc         Vec3
@@ -17,7 +18,7 @@ type Camera struct {
 	pixel_delta_v       Vec3
 }
 
-func NewCamera(aspect_ratio float64, image_width int, samples_per_pixel int) Camera {
+func NewCamera(aspect_ratio float64, image_width int, samples_per_pixel int, max_depth int) Camera {
 	var image_height = int(float64(image_width) / aspect_ratio)
 	if image_height < 1 {
 		image_height = 1
@@ -46,6 +47,7 @@ func NewCamera(aspect_ratio float64, image_width int, samples_per_pixel int) Cam
 		image_width,
 		image_height,
 		samples_per_pixel,
+		max_depth,
 		1.0 / float64(samples_per_pixel),
 		center,
 		pixel00_loc,
@@ -63,7 +65,7 @@ func (cam *Camera) render(world *Group) {
 			var pixel_color = BLACK
 			for range cam.samples_per_pixel {
 				var r = cam.getRay(i, j)
-				pixel_color.add(cam.rayColor(r, world))
+				pixel_color.add(cam.rayColor(r, cam.max_depth, world))
 			}
 			WriteColor(os.Stdout, pixel_color.times(cam.pixel_samples_scale))
 		}
@@ -87,10 +89,16 @@ func (cam *Camera) getRay(i int, j int) Ray {
 	return Ray{ray_origin, ray_direction}
 }
 
-func (cam *Camera) rayColor(r Ray, world *Group) Vec3 {
-	var hit = world.hit(r, Interval{0.0, math.Inf(1)})
+func (cam *Camera) rayColor(r Ray, depth int, world *Group) Vec3 {
+	if depth <= 0 {
+		return BLACK
+	}
+
+	var hit = world.hit(r, Interval{0.001, math.Inf(1)})
 	if hit.DidHit {
-		return hit.Normal.plus(Vec3{1.0, 1.0, 1.0}).times(0.5)
+		var direction = RandHemi(hit.Normal)
+		direction.add(RandUnit())
+		return cam.rayColor(Ray{hit.P, direction}, depth-1, world).times(0.5)
 	}
 	var unit_direction = r.Dir.unit()
 	var a = 0.5 * (unit_direction.Y + 1.0)
