@@ -1,13 +1,11 @@
-package util
+package main
 
 import (
 	"fmt"
 	"os"
 )
 
-type Color Vec3
-
-func WriteColor(out *os.File, pixel_color Color) {
+func WriteColor(out *os.File, pixel_color Vec3) {
 	var r = pixel_color.X
 	var g = pixel_color.Y
 	var b = pixel_color.Z

@@ -1,4 +1,4 @@
-package util
+package main
 
 import "math"
 
@@ -77,7 +77,7 @@ func Scale(v *Vec3, t float64) *Vec3 {
 	return v
 }
 
-func Scaled(v Vec3, t float64) Vec3 {
+func Times(v Vec3, t float64) Vec3 {
 	return Vec3{X: v.X * t, Y: v.Y * t, Z: v.Z * t}
 }
 
@@ -87,7 +87,7 @@ func Div(v *Vec3, t float64) *Vec3 {
 }
 
 func DivBy(v Vec3, t float64) Vec3 {
-	return Scaled(v, 1.0/t)
+	return Times(v, 1.0/t)
 }
 
 func Length(v Vec3) float64 {
