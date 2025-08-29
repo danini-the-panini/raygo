@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
+
+	"github.com/danini-the-panini/raygo/raygo/util"
 )
 
 func main() {
@@ -19,15 +21,12 @@ func main() {
 	for j := range image_height {
 		fmt.Fprint(os.Stderr, "\rScalines remaining: ", (image_height - j), " ")
 		for i := range image_width {
-			var r = float64(i) / float64(image_width-1)
-			var g = float64(j) / float64(image_height-1)
-			var b = 0.0
-
-			var ir = int(255.999 * r)
-			var ig = int(255.999 * g)
-			var ib = int(255.999 * b)
-
-			fmt.Println(ir, " ", ig, " ", ib)
+			var pixel_color = util.Color{
+				X: float64(i) / float64(image_width-1),
+				Y: float64(j) / float64(image_height-1),
+				Z: 0.0,
+			}
+			util.WriteColor(os.Stdout, pixel_color)
 		}
 	}
 
