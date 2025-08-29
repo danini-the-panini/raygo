@@ -6,25 +6,10 @@ import (
 	"os"
 )
 
-func HitSphere(center Vec3, radius float64, r Ray) float64 {
-	var oc = center.minus(r.Origin)
-	var a = r.Dir.lenSq()
-	var h = r.Dir.dot(oc)
-	var c = oc.lenSq() - radius*radius
-	var discriminant = h*h - a*c
-
-	if discriminant < 0 {
-		return -1.0
-	} else {
-		return (h - math.Sqrt(discriminant)) / a
-	}
-}
-
-func RayColor(r Ray) Vec3 {
-	var t = HitSphere(Vec3{0.0, 0.0, -1.0}, 0.5, r)
-	if t > 0.0 {
-		var n = r.at(t).minus(Vec3{0.0, 0.0, -1.0}).unit()
-		return Vec3{n.X + 1.0, n.Y + 1.0, n.Z + 1.0}.times(0.5)
+func RayColor(r Ray, world *Group) Vec3 {
+	var hit = world.hit(r, 0.0, math.Inf(1))
+	if hit.DidHit {
+		return hit.Normal.plus(Vec3{1.0, 1.0, 1.0}).times(0.5)
 	}
 	var unit_direction = r.Dir.unit()
 	var a = 0.5 * (unit_direction.Y + 1.0)
@@ -42,6 +27,16 @@ func main() {
 	if image_height < 1 {
 		image_height = 1
 	}
+
+	// World
+
+	var world = NewGroup()
+
+	var sphere1 = Sphere{Vec3{0.0, 0.0, -1.0}, 0.5}
+	var sphere2 = Sphere{Vec3{0.0, -100.5, -1.0}, 100.0}
+
+	world.add(&sphere1)
+	world.add(&sphere2)
 
 	// Camera
 
@@ -70,7 +65,7 @@ func main() {
 			var ray_direction = pixel_center.minus(camera_center)
 			var r = Ray{camera_center, ray_direction}
 
-			var pixel_color = RayColor(r)
+			var pixel_color = RayColor(r, &world)
 			WriteColor(os.Stdout, pixel_color)
 		}
 	}
