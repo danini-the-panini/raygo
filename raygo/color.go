@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-var BLACK = Vec3{0.0, 0.0, 0.0}
+var BLACK = ZERO3
 var WHITE = Vec3{1.0, 1.0, 1.0}
 
 func linearToGamma(linear_component float64) float64 {

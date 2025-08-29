@@ -11,6 +11,8 @@ type Vec3 struct {
 	Z float64
 }
 
+var ZERO3 = Vec3{0.0, 0.0, 0.0}
+
 func Origin3() Vec3 {
 	return Vec3{X: 0.0, Y: 0.0, Z: 0.0}
 }
@@ -80,6 +82,10 @@ func (v *Vec3) scale(t float64) *Vec3 {
 	return v
 }
 
+func (v Vec3) mul(u Vec3) Vec3 {
+	return Vec3{v.X * u.X, v.Y * u.Y, v.Z * u.Z}
+}
+
 func (v Vec3) times(t float64) Vec3 {
 	return Vec3{X: v.X * t, Y: v.Y * t, Z: v.Z * t}
 }
@@ -119,6 +125,15 @@ func (v Vec3) unit() Vec3 {
 
 func (v *Vec3) normalize() *Vec3 {
 	return v.div(v.len())
+}
+
+func (v Vec3) nearZero() bool {
+	var s = 1e-8
+	return math.Abs(v.X) < s && math.Abs(v.Y) < s && math.Abs(v.Z) < s
+}
+
+func (v Vec3) reflect(n Vec3) Vec3 {
+	return v.minus(n.times(2.0 * v.dot(n)))
 }
 
 func SampleSquare() Vec3 {

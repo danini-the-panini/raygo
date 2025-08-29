@@ -96,9 +96,11 @@ func (cam *Camera) rayColor(r Ray, depth int, world *Group) Vec3 {
 
 	var hit = world.hit(r, Interval{0.001, math.Inf(1)})
 	if hit.DidHit {
-		var direction = RandHemi(hit.Normal)
-		direction.add(RandUnit())
-		return cam.rayColor(Ray{hit.P, direction}, depth-1, world).times(0.5)
+		var scat = hit.Mat.scatter(r, hit)
+		if scat.DidScatter {
+			return scat.Attenuation.mul(cam.rayColor(scat.Scattered, depth-1, world))
+		}
+		return BLACK
 	}
 	var unit_direction = r.Dir.unit()
 	var a = 0.5 * (unit_direction.Y + 1.0)

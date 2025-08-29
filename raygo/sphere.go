@@ -5,6 +5,7 @@ import "math"
 type Sphere struct {
 	Center Vec3
 	Radius float64
+	Mat    Material
 }
 
 func (s *Sphere) hit(r Ray, ray_t Interval) Hit {
@@ -30,5 +31,5 @@ func (s *Sphere) hit(r Ray, ray_t Interval) Hit {
 
 	var p = r.at(root)
 
-	return DidHit(p, root, r, p.minus(s.Center).divBy(s.Radius))
+	return DidHit(p, root, r, p.minus(s.Center).divBy(s.Radius), s.Mat)
 }
