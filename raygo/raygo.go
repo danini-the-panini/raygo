@@ -5,7 +5,19 @@ import (
 	"os"
 )
 
+func HitSphere(center Vec3, radius float64, r Ray) bool {
+	var oc = Minus(center, r.Origin)
+	var a = Dot(r.Dir, r.Dir)
+	var b = -2.0 * Dot(r.Dir, oc)
+	var c = Dot(oc, oc) - radius*radius
+	var discriminant = b*b - 4.0*a*c
+	return discriminant >= 0.0
+}
+
 func RayColor(r Ray) Vec3 {
+	if HitSphere(Vec3{0.0, 0.0, -1.0}, 0.5, r) {
+		return Vec3{1.0, 0.0, 0.0}
+	}
 	var unit_direction = Unit(r.Dir)
 	var a = 0.5 * (unit_direction.Y + 1.0)
 	var color1 = Vec3{1.0, 1.0, 1.0}
