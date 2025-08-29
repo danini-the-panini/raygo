@@ -23,7 +23,7 @@ func main() {
 	world.add(&sphere1)
 	world.add(&sphere2)
 
-	var cam = NewCamera(16.0/9.0, 400)
+	var cam = NewCamera(16.0/9.0, 400, 100)
 
 	cam.render(&world)
 }

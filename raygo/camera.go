@@ -7,15 +7,17 @@ import (
 )
 
 type Camera struct {
-	image_width   int
-	image_height  int
-	center        Vec3
-	pixel00_loc   Vec3
-	pixel_delta_u Vec3
-	pixel_delta_v Vec3
+	image_width         int
+	image_height        int
+	samples_per_pixel   int
+	pixel_samples_scale float64
+	center              Vec3
+	pixel00_loc         Vec3
+	pixel_delta_u       Vec3
+	pixel_delta_v       Vec3
 }
 
-func NewCamera(aspect_ratio float64, image_width int) Camera {
+func NewCamera(aspect_ratio float64, image_width int, samples_per_pixel int) Camera {
 	var image_height = int(float64(image_width) / aspect_ratio)
 	if image_height < 1 {
 		image_height = 1
@@ -43,6 +45,8 @@ func NewCamera(aspect_ratio float64, image_width int) Camera {
 	return Camera{
 		image_width,
 		image_height,
+		samples_per_pixel,
+		1.0 / float64(samples_per_pixel),
 		center,
 		pixel00_loc,
 		pixel_delta_u,
@@ -50,25 +54,40 @@ func NewCamera(aspect_ratio float64, image_width int) Camera {
 	}
 }
 
-func (self *Camera) render(world *Group) {
-	fmt.Println("P3\n", self.image_width, " ", self.image_height, "\n255")
+func (cam *Camera) render(world *Group) {
+	fmt.Println("P3\n", cam.image_width, " ", cam.image_height, "\n255")
 
-	for j := range self.image_height {
-		fmt.Fprint(os.Stderr, "\rScalines remaining: ", (self.image_height - j), " ")
-		for i := range self.image_width {
-			var pixel_center = self.pixel00_loc.plus(self.pixel_delta_u.times(float64(i))).plus(self.pixel_delta_v.times(float64(j)))
-			var ray_direction = pixel_center.minus(self.center)
-			var r = Ray{self.center, ray_direction}
-
-			var pixel_color = self.rayColor(r, world)
-			WriteColor(os.Stdout, pixel_color)
+	for j := range cam.image_height {
+		fmt.Fprint(os.Stderr, "\rScalines remaining: ", (cam.image_height - j), " ")
+		for i := range cam.image_width {
+			var pixel_color = BLACK
+			for range cam.samples_per_pixel {
+				var r = cam.getRay(i, j)
+				pixel_color.add(cam.rayColor(r, world))
+			}
+			WriteColor(os.Stdout, pixel_color.times(cam.pixel_samples_scale))
 		}
 	}
 
 	fmt.Fprint(os.Stderr, "\rDone.                                 ")
 }
 
-func (self *Camera) rayColor(r Ray, world *Group) Vec3 {
+func (cam *Camera) getRay(i int, j int) Ray {
+	// Construct a camera ray originating from the origin and directed at randomly sampled
+	// point around the pixel location i, j.
+
+	var offset = SampleSquare()
+	var pixel_sample = cam.pixel00_loc.
+		plus(cam.pixel_delta_u.times(float64(i) + offset.X)).
+		plus(cam.pixel_delta_v.times(float64(j) + offset.Y))
+
+	var ray_origin = cam.center
+	var ray_direction = pixel_sample.minus(ray_origin)
+
+	return Ray{ray_origin, ray_direction}
+}
+
+func (cam *Camera) rayColor(r Ray, world *Group) Vec3 {
 	var hit = world.hit(r, Interval{0.0, math.Inf(1)})
 	if hit.DidHit {
 		return hit.Normal.plus(Vec3{1.0, 1.0, 1.0}).times(0.5)

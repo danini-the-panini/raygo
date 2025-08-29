@@ -7,11 +7,11 @@ type Sphere struct {
 	Radius float64
 }
 
-func (self *Sphere) hit(r Ray, ray_t Interval) Hit {
-	var oc = self.Center.minus(r.Origin)
+func (s *Sphere) hit(r Ray, ray_t Interval) Hit {
+	var oc = s.Center.minus(r.Origin)
 	var a = r.Dir.lenSq()
 	var h = r.Dir.dot(oc)
-	var c = oc.lenSq() - self.Radius*self.Radius
+	var c = oc.lenSq() - s.Radius*s.Radius
 
 	var discriminant = h*h - a*c
 	if discriminant < 0.0 {
@@ -30,5 +30,5 @@ func (self *Sphere) hit(r Ray, ray_t Interval) Hit {
 
 	var p = r.at(root)
 
-	return DidHit(p, root, r, p.minus(self.Center).divBy(self.Radius))
+	return DidHit(p, root, r, p.minus(s.Center).divBy(s.Radius))
 }

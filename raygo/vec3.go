@@ -1,6 +1,9 @@
 package main
 
-import "math"
+import (
+	"math"
+	"math/rand"
+)
 
 type Vec3 struct {
 	X float64
@@ -116,4 +119,8 @@ func (v Vec3) unit() Vec3 {
 
 func (v *Vec3) normalize() *Vec3 {
 	return v.div(v.len())
+}
+
+func SampleSquare() Vec3 {
+	return Vec3{rand.Float64() - 0.5, rand.Float64() - 0.5, 0.0}
 }
