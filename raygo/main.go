@@ -19,8 +19,8 @@ func main() {
 
 	var mat_ground = Lambertian{Vec3{0.8, 0.8, 0.0}}
 	var mat_center = Lambertian{Vec3{0.1, 0.2, 0.5}}
-	var mat_left = Metal{Vec3{0.8, 0.8, 0.8}}
-	var mat_right = Metal{Vec3{0.8, 0.6, 0.2}}
+	var mat_left = Metal{Vec3{0.8, 0.8, 0.8}, 0.3}
+	var mat_right = Metal{Vec3{0.8, 0.6, 0.2}, 1.0}
 
 	var ground = Sphere{Vec3{0.0, -100.5, -1.0}, 100.0, &mat_ground}
 	var sphere_center = Sphere{Vec3{0.0, 0.0, -1.2}, 0.5, &mat_center}
