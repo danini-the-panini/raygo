@@ -7,10 +7,10 @@ import (
 )
 
 func HitSphere(center Vec3, radius float64, r Ray) float64 {
-	var oc = Minus(center, r.Origin)
-	var a = LengthSq(r.Dir)
-	var h = Dot(r.Dir, oc)
-	var c = LengthSq(oc) - radius*radius
+	var oc = center.minus(r.Origin)
+	var a = r.Dir.lenSq()
+	var h = r.Dir.dot(oc)
+	var c = oc.lenSq() - radius*radius
 	var discriminant = h*h - a*c
 
 	if discriminant < 0 {
@@ -23,14 +23,12 @@ func HitSphere(center Vec3, radius float64, r Ray) float64 {
 func RayColor(r Ray) Vec3 {
 	var t = HitSphere(Vec3{0.0, 0.0, -1.0}, 0.5, r)
 	if t > 0.0 {
-		var n = Unit(Minus(At(r, t), Vec3{0.0, 0.0, -1.0}))
-		return Times(Vec3{n.X + 1.0, n.Y + 1.0, n.Z + 1.0}, 0.5)
+		var n = r.at(t).minus(Vec3{0.0, 0.0, -1.0}).unit()
+		return Vec3{n.X + 1.0, n.Y + 1.0, n.Z + 1.0}.times(0.5)
 	}
-	var unit_direction = Unit(r.Dir)
+	var unit_direction = r.Dir.unit()
 	var a = 0.5 * (unit_direction.Y + 1.0)
-	var color1 = Vec3{1.0, 1.0, 1.0}
-	var color2 = Vec3{0.5, 0.7, 1.0}
-	return *Add(Scale(&color1, 1.0-a), *Scale(&color2, a))
+	return Vec3{1.0, 1.0, 1.0}.times(1.0 - a).plus(Vec3{0.5, 0.7, 1.0}.times(a))
 }
 
 func main() {
@@ -55,12 +53,11 @@ func main() {
 	var viewport_u = Vec3{viewport_width, 0.0, 0.0}
 	var viewport_v = Vec3{0.0, -viewport_height, 0.0}
 
-	var pixel_delta_u = DivBy(viewport_u, float64(image_width))
-	var pixel_delta_v = DivBy(viewport_v, float64(image_height))
+	var pixel_delta_u = viewport_u.divBy(float64(image_width))
+	var pixel_delta_v = viewport_v.divBy(float64(image_height))
 
-	var viewport_upper_left = Minus(Minus(Minus(camera_center,
-		Vec3{0.0, 0.0, focal_length}), DivBy(viewport_u, 2.0)), DivBy(viewport_v, 2.0))
-	var pixel00_loc = Plus(viewport_upper_left, Times(Plus(pixel_delta_u, pixel_delta_v), 0.5))
+	var viewport_upper_left = camera_center.minus(Vec3{0.0, 0.0, focal_length}).minus(viewport_u.divBy(2.0)).minus(viewport_v.divBy(2.0))
+	var pixel00_loc = viewport_upper_left.plus(pixel_delta_u.plus(pixel_delta_v).times(0.5))
 
 	// Render
 
@@ -69,9 +66,8 @@ func main() {
 	for j := range image_height {
 		fmt.Fprint(os.Stderr, "\rScalines remaining: ", (image_height - j), " ")
 		for i := range image_width {
-			var pixel_center = pixel00_loc
-			Add(Add(&pixel_center, Times(pixel_delta_u, float64(i))), Times(pixel_delta_v, float64(j)))
-			var ray_direction = Minus(pixel_center, camera_center)
+			var pixel_center = pixel00_loc.plus(pixel_delta_u.times(float64(i))).plus(pixel_delta_v.times(float64(j)))
+			var ray_direction = pixel_center.minus(camera_center)
 			var r = Ray{camera_center, ray_direction}
 
 			var pixel_color = RayColor(r)

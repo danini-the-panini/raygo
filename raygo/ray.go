@@ -5,7 +5,7 @@ type Ray struct {
 	Dir    Vec3
 }
 
-func At(r Ray, t float64) Vec3 {
-	var v = Times(r.Dir, t)
-	return *Add(&v, r.Origin)
+func (r Ray) at(t float64) Vec3 {
+	var v = r.Dir.times(t)
+	return *v.add(r.Origin)
 }
