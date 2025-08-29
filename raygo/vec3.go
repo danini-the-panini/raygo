@@ -136,6 +136,13 @@ func (v Vec3) reflect(n Vec3) Vec3 {
 	return v.minus(n.times(2.0 * v.dot(n)))
 }
 
+func (v Vec3) refract(n Vec3, etai_over_etat float64) Vec3 {
+	var cos_theta = math.Min(v.inverse().dot(n), 1.0)
+	var r_out_perp = v.plus(n.times(cos_theta)).times(etai_over_etat)
+	var r_out_parallel = n.times(-math.Sqrt(math.Abs(1.0 - r_out_perp.lenSq())))
+	return r_out_perp.plus(r_out_parallel)
+}
+
 func SampleSquare() Vec3 {
 	return Vec3{rand.Float64() - 0.5, rand.Float64() - 0.5, 0.0}
 }

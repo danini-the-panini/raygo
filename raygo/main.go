@@ -19,20 +19,23 @@ func main() {
 
 	var mat_ground = Lambertian{Vec3{0.8, 0.8, 0.0}}
 	var mat_center = Lambertian{Vec3{0.1, 0.2, 0.5}}
-	var mat_left = Metal{Vec3{0.8, 0.8, 0.8}, 0.3}
+	var mat_left = Dielectric{1.50}
+	var mat_bubble = Dielectric{1.00 / 1.50}
 	var mat_right = Metal{Vec3{0.8, 0.6, 0.2}, 1.0}
 
 	var ground = Sphere{Vec3{0.0, -100.5, -1.0}, 100.0, &mat_ground}
 	var sphere_center = Sphere{Vec3{0.0, 0.0, -1.2}, 0.5, &mat_center}
-	var sphere_left = Sphere{Vec3{-1.0, 0.0, -1.2}, 0.5, &mat_left}
-	var sphere_right = Sphere{Vec3{1.0, 0.0, -1.2}, 0.5, &mat_right}
+	var sphere_left = Sphere{Vec3{-1.0, 0.0, -1.0}, 0.5, &mat_left}
+	var sphere_bubble = Sphere{Vec3{-1.0, 0.0, -1.0}, 0.4, &mat_bubble}
+	var sphere_right = Sphere{Vec3{1.0, 0.0, -1.0}, 0.5, &mat_right}
 
 	world.add(&ground)
 	world.add(&sphere_center)
 	world.add(&sphere_left)
+	world.add(&sphere_bubble)
 	world.add(&sphere_right)
 
-	var cam = NewCamera(16.0/9.0, 400, 100, 50)
+	var cam = NewCamera(16.0/9.0, 400, 10, 50)
 
 	cam.render(&world)
 }
