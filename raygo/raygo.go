@@ -2,21 +2,29 @@ package main
 
 import (
 	"fmt"
+	"math"
 	"os"
 )
 
-func HitSphere(center Vec3, radius float64, r Ray) bool {
+func HitSphere(center Vec3, radius float64, r Ray) float64 {
 	var oc = Minus(center, r.Origin)
-	var a = Dot(r.Dir, r.Dir)
-	var b = -2.0 * Dot(r.Dir, oc)
-	var c = Dot(oc, oc) - radius*radius
-	var discriminant = b*b - 4.0*a*c
-	return discriminant >= 0.0
+	var a = LengthSq(r.Dir)
+	var h = Dot(r.Dir, oc)
+	var c = LengthSq(oc) - radius*radius
+	var discriminant = h*h - a*c
+
+	if discriminant < 0 {
+		return -1.0
+	} else {
+		return (h - math.Sqrt(discriminant)) / a
+	}
 }
 
 func RayColor(r Ray) Vec3 {
-	if HitSphere(Vec3{0.0, 0.0, -1.0}, 0.5, r) {
-		return Vec3{1.0, 0.0, 0.0}
+	var t = HitSphere(Vec3{0.0, 0.0, -1.0}, 0.5, r)
+	if t > 0.0 {
+		var n = Unit(Minus(At(r, t), Vec3{0.0, 0.0, -1.0}))
+		return Times(Vec3{n.X + 1.0, n.Y + 1.0, n.Z + 1.0}, 0.5)
 	}
 	var unit_direction = Unit(r.Dir)
 	var a = 0.5 * (unit_direction.Y + 1.0)
