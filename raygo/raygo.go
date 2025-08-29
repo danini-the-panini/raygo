@@ -7,7 +7,7 @@ import (
 )
 
 func RayColor(r Ray, world *Group) Vec3 {
-	var hit = world.hit(r, 0.0, math.Inf(1))
+	var hit = world.hit(r, Interval{0.0, math.Inf(1)})
 	if hit.DidHit {
 		return hit.Normal.plus(Vec3{1.0, 1.0, 1.0}).times(0.5)
 	}

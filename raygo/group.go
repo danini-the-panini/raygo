@@ -16,13 +16,13 @@ func (self *Group) add(obj Object) {
 	self.Objects = append(self.Objects, obj)
 }
 
-func (self *Group) hit(r Ray, ray_tmin float64, ray_tmax float64) Hit {
+func (self *Group) hit(r Ray, ray_t Interval) Hit {
 	var temp_hit = NoHit
 	var hit Hit = NoHit
-	var closest = ray_tmax
+	var closest = ray_t.Max
 
 	for _, obj := range self.Objects {
-		temp_hit = obj.hit(r, ray_tmin, closest)
+		temp_hit = obj.hit(r, Interval{ray_t.Min, closest})
 		if temp_hit.DidHit {
 			closest = temp_hit.T
 			hit = temp_hit

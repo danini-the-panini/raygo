@@ -20,5 +20,5 @@ func DidHit(p Vec3, t float64, r Ray, outward_normal Vec3) Hit {
 }
 
 type Object interface {
-	hit(r Ray, ray_tmin float64, ray_tmax float64) Hit
+	hit(r Ray, ray_t Interval) Hit
 }

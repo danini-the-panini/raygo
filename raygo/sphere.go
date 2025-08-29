@@ -7,7 +7,7 @@ type Sphere struct {
 	Radius float64
 }
 
-func (self *Sphere) hit(r Ray, ray_tmin float64, ray_tmax float64) Hit {
+func (self *Sphere) hit(r Ray, ray_t Interval) Hit {
 	var oc = self.Center.minus(r.Origin)
 	var a = r.Dir.lenSq()
 	var h = r.Dir.dot(oc)
@@ -21,9 +21,9 @@ func (self *Sphere) hit(r Ray, ray_tmin float64, ray_tmax float64) Hit {
 	var sqrtd = math.Sqrt(discriminant)
 
 	var root = (h - sqrtd) / a
-	if root < ray_tmin || ray_tmax <= root {
+	if !ray_t.surrounds(root) {
 		root = (h + sqrtd) / a
-		if root <= ray_tmin || ray_tmax <= root {
+		if !ray_t.surrounds(root) {
 			return NoHit
 		}
 	}
