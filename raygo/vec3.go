@@ -172,3 +172,14 @@ func RandHemi(normal Vec3) Vec3 {
 	}
 	return on_unit_sphere
 }
+
+func RandUnitDisk() Vec3 {
+	var i = Interval{-1.0, 1.0}
+	for {
+		var p = Vec3{i.rand(), i.rand(), 0.0}
+		var lensq = p.lenSq()
+		if lensq < 1.0 {
+			return p
+		}
+	}
+}

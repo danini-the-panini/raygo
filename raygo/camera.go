@@ -19,9 +19,23 @@ type Camera struct {
 	u                   Vec3
 	v                   Vec3
 	w                   Vec3
+	defocus_angle       float64
+	defocus_disk_u      Vec3
+	defocus_disc_v      Vec3
 }
 
-func NewCamera(aspect_ratio float64, image_width int, vfov float64, lookfrom Vec3, lookat Vec3, vup Vec3, samples_per_pixel int, max_depth int) Camera {
+func NewCamera(
+	aspect_ratio float64,
+	image_width int,
+	vfov float64,
+	lookfrom Vec3,
+	lookat Vec3,
+	vup Vec3,
+	defocus_angle float64,
+	focus_dist float64,
+	samples_per_pixel int,
+	max_depth int,
+) Camera {
 	var image_height = int(float64(image_width) / aspect_ratio)
 	if image_height < 1 {
 		image_height = 1
@@ -30,10 +44,9 @@ func NewCamera(aspect_ratio float64, image_width int, vfov float64, lookfrom Vec
 	var center = lookfrom
 
 	// Determine viewport dimensions.
-	var focal_length = lookfrom.minus(lookat).len()
 	var theta = Deg2Rad(vfov)
 	var h = math.Tan(theta / 2.0)
-	var viewport_height = 2.0 * h * focal_length
+	var viewport_height = 2.0 * h * focus_dist
 	var viewport_width = viewport_height * (float64(image_width) / float64(image_height))
 
 	// Calculate the u,v,w unit basis vectors for the camera coordinate frame.
@@ -50,8 +63,13 @@ func NewCamera(aspect_ratio float64, image_width int, vfov float64, lookfrom Vec
 	var pixel_delta_v = viewport_v.divBy(float64(image_height))
 
 	// Calculate the location of the upper left pixel.
-	var viewport_upper_left = center.minus(w.times(focal_length)).minus(viewport_u.divBy(2.0)).minus(viewport_v.divBy(2.0))
+	var viewport_upper_left = center.minus(w.times(focus_dist)).minus(viewport_u.divBy(2.0)).minus(viewport_v.divBy(2.0))
 	var pixel00_loc = viewport_upper_left.plus(pixel_delta_u.plus(pixel_delta_v).times(0.5))
+
+	// Calculate the camera defocus disk basis vectors.
+	var defocus_radius = focus_dist * math.Tan(Deg2Rad(defocus_angle/2.0))
+	var defocus_disk_u = u.times(defocus_radius)
+	var defocus_disk_v = v.times(defocus_radius)
 
 	return Camera{
 		image_width,
@@ -64,6 +82,9 @@ func NewCamera(aspect_ratio float64, image_width int, vfov float64, lookfrom Vec
 		pixel_delta_u,
 		pixel_delta_v,
 		u, v, w,
+		defocus_angle,
+		defocus_disk_u,
+		defocus_disk_v,
 	}
 }
 
@@ -95,9 +116,17 @@ func (cam *Camera) getRay(i int, j int) Ray {
 		plus(cam.pixel_delta_v.times(float64(j) + offset.Y))
 
 	var ray_origin = cam.center
+	if cam.defocus_angle > 0.0 {
+		ray_origin = cam.defocusDiskSample()
+	}
 	var ray_direction = pixel_sample.minus(ray_origin)
 
 	return Ray{ray_origin, ray_direction}
+}
+
+func (cam *Camera) defocusDiskSample() Vec3 {
+	var p = RandUnitDisk()
+	return cam.center.plus(cam.defocus_disk_u.times(p.X)).plus(cam.defocus_disc_v.times(p.Y))
 }
 
 func (cam *Camera) rayColor(r Ray, depth int, world *Group) Vec3 {
