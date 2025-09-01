@@ -35,7 +35,7 @@ func main() {
 	world.add(&sphere_bubble)
 	world.add(&sphere_right)
 
-	var cam = NewCamera(16.0/9.0, 400, 10, 50)
+	var cam = NewCamera(16.0/9.0, 400, 20.0, Vec3{-2.0, 2.0, 1.0}, Vec3{0.0, 0.0, -1.0}, Y_UP, 100, 50)
 
 	cam.render(&world)
 }

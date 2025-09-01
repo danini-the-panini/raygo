@@ -12,6 +12,9 @@ type Vec3 struct {
 }
 
 var ZERO3 = Vec3{0.0, 0.0, 0.0}
+var X_UP = Vec3{1.0, 0.0, 0.0}
+var Y_UP = Vec3{0.0, 1.0, 0.0}
+var Z_UP = Vec3{0.0, 0.0, 1.0}
 
 func Origin3() Vec3 {
 	return Vec3{X: 0.0, Y: 0.0, Z: 0.0}

@@ -16,31 +16,41 @@ type Camera struct {
 	pixel00_loc         Vec3
 	pixel_delta_u       Vec3
 	pixel_delta_v       Vec3
+	u                   Vec3
+	v                   Vec3
+	w                   Vec3
 }
 
-func NewCamera(aspect_ratio float64, image_width int, samples_per_pixel int, max_depth int) Camera {
+func NewCamera(aspect_ratio float64, image_width int, vfov float64, lookfrom Vec3, lookat Vec3, vup Vec3, samples_per_pixel int, max_depth int) Camera {
 	var image_height = int(float64(image_width) / aspect_ratio)
 	if image_height < 1 {
 		image_height = 1
 	}
 
-	var center = Vec3{0.0, 0.0, 0.0}
+	var center = lookfrom
 
 	// Determine viewport dimensions.
-	var focal_length = 1.0
-	var viewport_height = 2.0
+	var focal_length = lookfrom.minus(lookat).len()
+	var theta = Deg2Rad(vfov)
+	var h = math.Tan(theta / 2.0)
+	var viewport_height = 2.0 * h * focal_length
 	var viewport_width = viewport_height * (float64(image_width) / float64(image_height))
 
+	// Calculate the u,v,w unit basis vectors for the camera coordinate frame.
+	var w = lookfrom.minus(lookat).unit()
+	var u = vup.cross(w).unit()
+	var v = w.cross(u)
+
 	// Calculate the vectors across the horizontal and down the verical viewport edges.
-	var viewport_u = Vec3{viewport_width, 0.0, 0.0}
-	var viewport_v = Vec3{0.0, -viewport_height, 0.0}
+	var viewport_u = u.times(viewport_width)
+	var viewport_v = v.inverse().times(viewport_height)
 
 	// Calculate the horizontal and vertical delta vectors from pizel to pixel.
 	var pixel_delta_u = viewport_u.divBy(float64(image_width))
 	var pixel_delta_v = viewport_v.divBy(float64(image_height))
 
 	// Calculate the location of the upper left pixel.
-	var viewport_upper_left = center.minus(Vec3{0.0, 0.0, focal_length}).minus(viewport_u.divBy(2.0)).minus(viewport_v.divBy(2.0))
+	var viewport_upper_left = center.minus(w.times(focal_length)).minus(viewport_u.divBy(2.0)).minus(viewport_v.divBy(2.0))
 	var pixel00_loc = viewport_upper_left.plus(pixel_delta_u.plus(pixel_delta_v).times(0.5))
 
 	return Camera{
@@ -53,6 +63,7 @@ func NewCamera(aspect_ratio float64, image_width int, samples_per_pixel int, max
 		pixel00_loc,
 		pixel_delta_u,
 		pixel_delta_v,
+		u, v, w,
 	}
 }
 
