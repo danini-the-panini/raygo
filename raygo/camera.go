@@ -4,7 +4,15 @@ import (
 	"fmt"
 	"math"
 	"os"
+	"runtime"
+	"sync"
 )
+
+type Pixel struct {
+	X     int
+	Y     int
+	Color Vec3
+}
 
 type Camera struct {
 	image_width         int
@@ -88,22 +96,58 @@ func NewCamera(
 	}
 }
 
+func (cam *Camera) worker(world *Group, jobs <-chan Pixel, results chan<- Pixel, wg *sync.WaitGroup) {
+	defer wg.Done()
+	for pixel := range jobs {
+		for range cam.samples_per_pixel {
+			var r = cam.getRay(pixel.X, pixel.Y)
+			pixel.Color.add(cam.rayColor(r, cam.max_depth, world))
+		}
+		pixel.Color.scale(cam.pixel_samples_scale)
+		results <- pixel
+		var progress = float64(len(results)) / float64(cam.image_width*cam.image_height)
+		fmt.Fprint(os.Stderr, "\rScalines remaining: ", math.Round(progress*100.0), "% ")
+	}
+}
+
 func (cam *Camera) render(world *Group) {
 	fmt.Println("P3\n", cam.image_width, " ", cam.image_height, "\n255")
-
-	for j := range cam.image_height {
-		fmt.Fprint(os.Stderr, "\rScalines remaining: ", (cam.image_height - j), " ")
-		for i := range cam.image_width {
-			var pixel_color = BLACK
-			for range cam.samples_per_pixel {
-				var r = cam.getRay(i, j)
-				pixel_color.add(cam.rayColor(r, cam.max_depth, world))
-			}
-			WriteColor(os.Stdout, pixel_color.times(cam.pixel_samples_scale))
-		}
+	var pixels = make([]Vec3, cam.image_width*cam.image_height)
+	for i := range len(pixels) {
+		pixels[i] = BLACK
 	}
 
-	fmt.Fprint(os.Stderr, "\rDone.                                 ")
+	var num_workers = runtime.NumCPU()
+	num_workers = 1
+
+	var jobs = make(chan Pixel, len(pixels))
+	var results = make(chan Pixel, len(pixels))
+	var wg sync.WaitGroup
+
+	for w := 1; w <= num_workers; w++ {
+		wg.Add(1)
+		go cam.worker(world, jobs, results, &wg)
+	}
+
+	for j := range cam.image_height {
+		for i := range cam.image_width {
+			jobs <- Pixel{i, j, BLACK}
+		}
+	}
+	close(jobs)
+
+	wg.Wait()
+	close(results)
+
+	for pixel := range results {
+		pixels[pixel.Y*cam.image_width+pixel.X] = pixel.Color
+	}
+
+	for _, pixel := range pixels {
+		WriteColor(os.Stdout, pixel)
+	}
+
+	// fmt.Fprint(os.Stderr, "\rDone.                                 ")
 }
 
 func (cam *Camera) getRay(i int, j int) Ray {
